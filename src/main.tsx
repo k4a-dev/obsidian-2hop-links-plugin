@@ -1,4 +1,11 @@
-import { CachedMetadata, MarkdownView, Plugin, TFile } from "obsidian";
+import {
+  CachedMetadata,
+  EditableFileView,
+  MarkdownPreviewView,
+  MarkdownView,
+  Plugin,
+  TFile,
+} from "obsidian";
 import React from "react";
 import ReactDOM from "react-dom";
 import { FileEntity } from "./model/FileEntity";
@@ -258,7 +265,10 @@ export default class TwohopLinksPlugin extends Plugin {
     );
   }
 
-  private async openFile(fileEntity: FileEntity): Promise<void> {
+  private async openFile(
+    fileEntity: FileEntity,
+    newLeaf: boolean
+  ): Promise<void> {
     const linkText = removeBlockReference(fileEntity.linkText);
 
     console.debug(
@@ -274,9 +284,12 @@ export default class TwohopLinksPlugin extends Plugin {
         return;
       }
     }
+
     return this.app.workspace.openLinkText(
       fileEntity.linkText,
-      fileEntity.sourcePath
+      fileEntity.sourcePath,
+      newLeaf,
+      MarkdownPreviewView
     );
   }
 

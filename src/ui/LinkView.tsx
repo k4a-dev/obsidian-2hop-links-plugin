@@ -4,7 +4,7 @@ import { removeBlockReference } from "../utils";
 
 interface LinkViewProps {
   fileEntity: FileEntity;
-  onClick: (fileEntity: FileEntity) => Promise<void>;
+  onClick: (fileEntity: FileEntity, newLeaf: boolean) => Promise<void>;
   getPreview: (fileEntity: FileEntity) => Promise<string>;
   boxWidth: string;
   boxHeight: string;
@@ -41,10 +41,13 @@ export default class LinkView extends React.Component<
     return (
       <div
         className={"twohop-links-box"}
-        onClick={async () => this.props.onClick(this.props.fileEntity)}
+        onClick={async (event: React.MouseEvent) =>
+          this.props.onClick(this.props.fileEntity, event.ctrlKey)
+        }
         // To overwrite CodeMirror's handler
         onMouseDown={async (event) =>
-          event.button == 0 && this.props.onClick(this.props.fileEntity)
+          event.button == 0 &&
+          this.props.onClick(this.props.fileEntity, event.ctrlKey)
         }
         style={{ width: this.props.boxWidth, height: this.props.boxHeight }}
       >
