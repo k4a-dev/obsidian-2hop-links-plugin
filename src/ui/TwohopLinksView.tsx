@@ -19,6 +19,8 @@ export default class TwohopLinksView extends React.Component<TwohopLinksViewProp
   }
 
   render(): JSX.Element {
+    if (!this.props.twoHopLinks.length) return <></>;
+
     return (
       <div>
         {this.props.twoHopLinks.map((link) => (

@@ -17,6 +17,8 @@ export default class TagLinksListView extends React.Component<TagLinksListViewPr
   }
 
   render(): JSX.Element {
+    if (!this.props.tagLinksList.length) return <></>;
+
     return (
       <div>
         {this.props.tagLinksList.map((link) => (

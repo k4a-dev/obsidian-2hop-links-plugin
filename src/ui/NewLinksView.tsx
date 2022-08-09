@@ -16,34 +16,32 @@ export default class NewLinksView extends React.Component<NewLinksViewProps> {
   }
 
   render(): JSX.Element {
-    if (this.props.fileEntities.length > 0) {
-      return (
-        <div className="twohop-links-section">
-          <div
-            className={"twohop-links-box twohop-links-new-links-header"}
-            style={{
-              width: this.props.boxWidth,
-              height: this.props.boxHeight,
-            }}
-          >
-            New links
-          </div>
-          {this.props.fileEntities.map((it) => {
-            return (
-              <LinkView
-                fileEntity={it}
-                key={it.key()}
-                onClick={this.props.onClick}
-                getPreview={this.props.getPreview}
-                boxWidth={this.props.boxWidth}
-                boxHeight={this.props.boxHeight}
-              />
-            );
-          })}
+    if (!this.props.fileEntities.length) return <></>;
+
+    return (
+      <div className="twohop-links-section">
+        <div
+          className={"twohop-links-box twohop-links-new-links-header"}
+          style={{
+            width: this.props.boxWidth,
+            height: this.props.boxHeight,
+          }}
+        >
+          New links
         </div>
-      );
-    } else {
-      return <div />;
-    }
+        {this.props.fileEntities.map((it) => {
+          return (
+            <LinkView
+              fileEntity={it}
+              key={it.key()}
+              onClick={this.props.onClick}
+              getPreview={this.props.getPreview}
+              boxWidth={this.props.boxWidth}
+              boxHeight={this.props.boxHeight}
+            />
+          );
+        })}
+      </div>
+    );
   }
 }
