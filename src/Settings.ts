@@ -6,6 +6,7 @@ export interface TwohopPluginSettings {
   boxWidth: string;
   boxHeight: string;
   showImage: boolean;
+  excludesDuplicateLinks: boolean;
 }
 
 export const DEFAULT_SETTINGS: TwohopPluginSettings = {
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: TwohopPluginSettings = {
   boxWidth: "162px",
   boxHeight: "178px",
   showImage: true,
+  excludesDuplicateLinks: false,
 };
 
 export class TwohopSettingTab extends PluginSettingTab {
@@ -75,6 +77,20 @@ export class TwohopSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.showImage)
           .onChange(async (value) => {
             this.plugin.settings.showImage = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Excludes duplicates links")
+      .setDesc(
+        "If two or more links have the same 2hop links, merge the link displays into one."
+      )
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.excludesDuplicateLinks)
+          .onChange(async (value) => {
+            this.plugin.settings.excludesDuplicateLinks = value;
             await this.plugin.saveSettings();
           });
       });
