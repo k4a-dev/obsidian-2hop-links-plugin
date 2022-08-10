@@ -22,7 +22,7 @@ export default class TwohopLinksView extends React.Component<TwohopLinksViewProp
     if (!this.props.twoHopLinks.length) return <></>;
 
     return (
-      <div>
+      <>
         {this.props.twoHopLinks.map((link) => (
           <div
             className={
@@ -58,7 +58,7 @@ export default class TwohopLinksView extends React.Component<TwohopLinksViewProp
             ))}
           </div>
         ))}
-      </div>
+      </>
     );
   }
 }
