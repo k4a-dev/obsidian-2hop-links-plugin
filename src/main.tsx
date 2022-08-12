@@ -131,7 +131,6 @@ export default class TwohopLinksPlugin extends Plugin {
       activeFile,
       this.app.metadataCache.unresolvedLinks,
       forwardLinkSet,
-
       this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
     );
 
@@ -368,6 +367,7 @@ export default class TwohopLinksPlugin extends Plugin {
       }
 
       for (const dest of Object.keys(links[src])) {
+        // FrontLink -> FrontLinkの2hop
         if (activeFileLinks.has(src)) {
           if (!result[src]) {
             result[src] = [];
@@ -379,8 +379,21 @@ export default class TwohopLinksPlugin extends Plugin {
 
           result[src].push(dest);
         }
+
+        // FrontLink -> BackLinkの2hop
+        if (activeFileLinks.has(dest)) {
+          if (!result[dest]) {
+            result[dest] = [];
+          }
+          if (linkedPathSet !== undefined) {
+            if (linkedPathSet.has(src)) continue;
+            linkedPathSet.add(src);
+          }
+          result[dest].push(src);
+        }
       }
     }
+
     return result;
   }
 
