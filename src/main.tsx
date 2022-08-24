@@ -169,7 +169,9 @@ export default class TwohopLinksPlugin extends Plugin {
   private getContainerElements(markdownView: MarkdownView): Element[] {
     if (this.settings.putOnTop) {
       const elements = markdownView.containerEl.querySelectorAll(
-        ".markdown-source-view .CodeMirror-scroll, .markdown-preview-view, .markdown-source-view .cm-contentContainer"
+        `.markdown-source-view .CodeMirror-scroll,
+        .markdown-preview-view,
+        .markdown-source-view .cm-contentContainer`
       );
       console.debug(`getContainerElements: ${elements.length}`);
 
@@ -193,7 +195,9 @@ export default class TwohopLinksPlugin extends Plugin {
       return containers;
     } else {
       const elements = markdownView.containerEl.querySelectorAll(
-        ".markdown-source-view .CodeMirror-lines, .markdown-preview-view, .markdown-source-view .cm-contentContainer"
+        `.markdown-source-view .CodeMirror-lines,
+        div:not(.markdown-embed-content) > .markdown-preview-view,
+        div:not(.markdown-embed-content) > .markdown-source-view .cm-contentContainer`
       );
 
       const containers: Element[] = [];
