@@ -103,14 +103,12 @@ export default class TwohopLinksPlugin extends Plugin {
   }
 
   removeTwohopLinks(): void {
-    const markdownView: MarkdownView =
-      this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (markdownView === null) {
-      return;
-    }
-    for (const element of this.getContainerElements(markdownView)) {
-      if (element) {
-        element.remove();
+    const markdownViews = this.app.workspace.getLeavesOfType("markdown");
+    for (const markdownView of markdownViews) {
+      for (const element of this.getContainerElements(markdownView.containerEl)) {
+        if (element) {
+          element.remove();
+        }
       }
     }
   }
@@ -171,7 +169,9 @@ export default class TwohopLinksPlugin extends Plugin {
     const tagLinksList = this.getTagLinksList(activeFile, activeFileCache);
 
     // insert links to the footer
-    for (const container of this.getContainerElements(markdownView)) {
+    for (const container of this.getContainerElements(
+      markdownView.containerEl
+    )) {
       await this.injectTwohopLinks(
         forwardConnectedLinks,
         newLinks,
@@ -184,9 +184,9 @@ export default class TwohopLinksPlugin extends Plugin {
     }
   }
 
-  private getContainerElements(markdownView: MarkdownView): Element[] {
+  private getContainerElements(containerEl: HTMLElement): Element[] {
     if (this.settings.putOnTop) {
-      const elements = markdownView.containerEl.querySelectorAll(
+      const elements = containerEl.querySelectorAll(
         `.markdown-source-view .CodeMirror-scroll,
         .markdown-preview-view,
         .markdown-source-view .cm-contentContainer`
@@ -212,7 +212,7 @@ export default class TwohopLinksPlugin extends Plugin {
       console.debug(`Return container elements: ${containers.length}`);
       return containers;
     } else {
-      const elements = markdownView.containerEl.querySelectorAll(
+      const elements = containerEl.querySelectorAll(
         `.markdown-source-view .CodeMirror-lines,
         div:not(.markdown-embed-content) > .markdown-preview-view,
         div:not(.markdown-embed-content) > .markdown-source-view .cm-contentContainer`
