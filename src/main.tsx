@@ -1,4 +1,5 @@
 import {
+  addIcon,
   CachedMetadata,
   EditableFileView,
   MarkdownPreviewView,
@@ -58,6 +59,24 @@ export default class TwohopLinksPlugin extends Plugin {
       checkCallback: this.disable.bind(this),
     });
 
+    addIcon(
+      "2hop-link",
+      `<rect width="32" height="14" rx="3" fill="currentColor"/>
+      <rect y="36" width="32" height="15" rx="3" fill="currentColor"/>
+      <rect x="68" width="32" height="14" rx="3" fill="currentColor"/>
+      <rect x="68" y="36" width="32" height="15" rx="3" fill="currentColor"/>
+      <rect x="68" y="16" width="32" height="15" rx="3" fill="currentColor"/>
+      <rect x="68" y="53" width="32" height="14" rx="3" fill="currentColor"/>
+      <rect x="68" y="69" width="32" height="15" rx="3" fill="currentColor"/>
+      <rect x="68" y="86" width="32" height="14" rx="3" fill="currentColor"/>
+      <path d="M31 7H69M31 43H69" stroke="currentColor" stroke-width="3"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M46.5 20.5783V7H49.5V20.5783C49.5 21.4067 50.1716 22.0783 51 22.0783H69V25.0783H51C48.5147 25.0783 46.5 23.0636 46.5 20.5783ZM46.5 43.7831H49.5V58.8614H69V61.8614H49.5V74.4036H69V77.4036H49.5V90C49.5 90.8284 50.1716 91.5 51 91.5H69V94.5H51C48.5147 94.5 46.5 92.4853 46.5 90V43.7831Z" fill="currentColor"/>`
+    );
+
+    this.addRibbonIcon("2hop-link", "Toggle-2hop-links", () =>
+      this.enabled ? this.disable.bind(this)() : this.enable.bind(this)()
+    );
+
     this.addSettingTab(new TwohopSettingTab(this.app, this));
   }
 
@@ -90,9 +109,8 @@ export default class TwohopLinksPlugin extends Plugin {
       return;
     }
     for (const element of this.getContainerElements(markdownView)) {
-      const container = element.querySelector("." + CONTAINER_CLASS);
-      if (container) {
-        container.remove();
+      if (element) {
+        element.remove();
       }
     }
   }
