@@ -20,7 +20,7 @@ export default class TagLinksListView extends React.Component<TagLinksListViewPr
     if (!this.props.tagLinksList.length) return <></>;
 
     return (
-      <div>
+      <>
         {this.props.tagLinksList.map((link) => (
           <div className="twohop-links-section" key={link.tag}>
             <div
@@ -44,7 +44,7 @@ export default class TagLinksListView extends React.Component<TagLinksListViewPr
             ))}
           </div>
         ))}
-      </div>
+      </>
     );
   }
 }
