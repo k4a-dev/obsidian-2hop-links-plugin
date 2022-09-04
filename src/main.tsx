@@ -116,6 +116,8 @@ export default class TwohopLinksPlugin extends Plugin {
   }
 
   private async renderTwohopLinks(): Promise<void> {
+    if (!this.enabled) return;
+
     const markdownView: MarkdownView =
       this.app.workspace.getActiveViewOfType(MarkdownView);
     if (markdownView == null) {
