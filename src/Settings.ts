@@ -7,6 +7,9 @@ export interface TwohopPluginSettings {
   boxHeight: string;
   showImage: boolean;
   excludesDuplicateLinks: boolean;
+  excludeBacklink: boolean;
+  excludeFrontLink: boolean;
+  excludeTag: boolean;
 }
 
 export const DEFAULT_SETTINGS: TwohopPluginSettings = {
@@ -15,6 +18,9 @@ export const DEFAULT_SETTINGS: TwohopPluginSettings = {
   boxHeight: "178px",
   showImage: true,
   excludesDuplicateLinks: false,
+  excludeBacklink: false,
+  excludeFrontLink: false,
+  excludeTag: false,
 };
 
 export class TwohopSettingTab extends PluginSettingTab {
@@ -94,5 +100,26 @@ export class TwohopSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    const excludeLinkTitle: [
+      keyof TwohopPluginSettings,
+      keyof TwohopPluginSettings,
+      keyof TwohopPluginSettings
+    ] = ["excludeFrontLink", "excludeBacklink", "excludeTag"];
+
+    excludeLinkTitle.forEach((title) => {
+      if (typeof this.plugin.settings[title] === "boolean") {
+        new Setting(containerEl).setName(title).addToggle((toggle) => {
+          toggle
+            // @ts-ignore
+            .setValue(this.plugin.settings[title])
+            .onChange(async (value) => {
+              // @ts-ignore
+              this.plugin.settings[title] = value;
+              await this.plugin.saveSettings();
+            });
+        });
+      }
+    });
   }
 }

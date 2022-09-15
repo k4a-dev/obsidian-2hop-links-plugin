@@ -14,6 +14,8 @@ interface TwohopLinksRootViewProps {
   backwardConnectedLinks: FileEntity[];
   resolvedTwoHopLinks: TwohopLink[];
   unresolvedTwoHopLinks: TwohopLink[];
+  backlinkResolvedTwoHopLinks: TwohopLink[];
+  backlinkUnresolvedTwoHopLinks: TwohopLink[];
   tagLinksList: TagLinks[];
   onClick: (fileEntity: FileEntity) => Promise<void>;
   getPreview: (fileEntity: FileEntity) => Promise<string>;
@@ -57,6 +59,24 @@ export default class TwohopLinksRootView extends React.Component<TwohopLinksRoot
         />
         <TwohopLinksView
           twoHopLinks={this.props.resolvedTwoHopLinks}
+          resolved={true}
+          onClick={this.props.onClick}
+          getPreview={this.props.getPreview}
+          boxWidth={this.props.boxWidth}
+          boxHeight={this.props.boxHeight}
+        />
+
+        <TwohopLinksView
+          twoHopLinks={this.props.backlinkUnresolvedTwoHopLinks}
+          resolved={false}
+          onClick={this.props.onClick}
+          getPreview={this.props.getPreview}
+          boxWidth={this.props.boxWidth}
+          boxHeight={this.props.boxHeight}
+        />
+
+        <TwohopLinksView
+          twoHopLinks={this.props.backlinkResolvedTwoHopLinks}
           resolved={true}
           onClick={this.props.onClick}
           getPreview={this.props.getPreview}

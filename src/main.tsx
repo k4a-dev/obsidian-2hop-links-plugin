@@ -106,6 +106,7 @@ export default class TwohopLinksPlugin extends Plugin {
     const markdownViews = this.app.workspace.getLeavesOfType("markdown");
     for (const markdownView of markdownViews) {
       for (const element of this.getContainerElements(
+        // @ts-ignore
         markdownView.containerEl
       )) {
         if (element) {
@@ -147,19 +148,33 @@ export default class TwohopLinksPlugin extends Plugin {
     );
 
     // Aggregate links
-    const unresolvedTwoHopLinks = this.getTwohopLinks(
-      activeFile,
-      this.app.metadataCache.unresolvedLinks,
-      forwardLinkSet,
-      this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
-    );
+    const unresolvedTwoHopLinks = this.settings.excludeFrontLink
+      ? []
+      : this.getTwohopLinks(
+          activeFile,
+          this.app.metadataCache.unresolvedLinks,
+          forwardLinkSet,
+          this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+        );
 
-    const resolvedTwoHopLinks = this.getTwohopLinks(
-      activeFile,
-      this.app.metadataCache.resolvedLinks,
-      forwardLinkSet,
-      this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
-    );
+    const resolvedTwoHopLinks = this.settings.excludeFrontLink
+      ? []
+      : this.getTwohopLinks(
+          activeFile,
+          this.app.metadataCache.resolvedLinks,
+          forwardLinkSet,
+          this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+        );
+
+    // Aggregate TwohopLinks by Backlink
+    const backlinkTwoHopLinks = this.settings.excludeBacklink
+      ? { unresolvedTwoHopLinks: [], resolvedTwoHopLinks: [] }
+      : this.getBacklinktwoHopLinks(
+          activeFile,
+          backwardLinks,
+          forwardLinkSet,
+          this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+        );
 
     const twoHopLinkSets = new Set<string>(
       unresolvedTwoHopLinks
@@ -170,7 +185,9 @@ export default class TwohopLinksPlugin extends Plugin {
     const [forwardConnectedLinks, newLinks] =
       await this.splitLinksByConnectivity(forwardLinks, twoHopLinkSets);
 
-    const tagLinksList = this.getTagLinksList(activeFile, activeFileCache);
+    const tagLinksList = this.settings.excludeTag
+      ? []
+      : this.getTagLinksList(activeFile, activeFileCache);
 
     // insert links to the footer
     for (const container of this.getContainerElements(
@@ -182,6 +199,8 @@ export default class TwohopLinksPlugin extends Plugin {
         backwardLinks,
         unresolvedTwoHopLinks,
         resolvedTwoHopLinks,
+        backlinkTwoHopLinks.unresolvedTwoHopLinks,
+        backlinkTwoHopLinks.resolvedTwoHopLinks,
         tagLinksList,
         container
       );
@@ -281,6 +300,8 @@ export default class TwohopLinksPlugin extends Plugin {
     backwardConnectedLinks: FileEntity[],
     unresolvedTwoHopLinks: TwohopLink[],
     resolvedTwoHopLinks: TwohopLink[],
+    backlinkUnresolvedTwoHopLinks: TwohopLink[],
+    backlinkResolvedTwoHopLinks: TwohopLink[],
     tagLinksList: TagLinks[],
     container: Element
   ) {
@@ -291,6 +312,8 @@ export default class TwohopLinksPlugin extends Plugin {
         backwardConnectedLinks={backwardConnectedLinks}
         unresolvedTwoHopLinks={unresolvedTwoHopLinks}
         resolvedTwoHopLinks={resolvedTwoHopLinks}
+        backlinkUnresolvedTwoHopLinks={backlinkUnresolvedTwoHopLinks}
+        backlinkResolvedTwoHopLinks={backlinkResolvedTwoHopLinks}
         tagLinksList={tagLinksList}
         onClick={this.openFile.bind(this)}
         getPreview={this.readPreview.bind(this)}
@@ -421,6 +444,106 @@ export default class TwohopLinksPlugin extends Plugin {
     }
 
     return result;
+  }
+
+  private getBacklinktwoHopLinks(
+    activeFile: TFile,
+    backwardLinks: FileEntity[],
+    forwardLinkSet: Set<string>,
+    linkedPathSet: Set<string> | undefined
+  ): {
+    unresolvedTwoHopLinks: TwohopLink[];
+    resolvedTwoHopLinks: TwohopLink[];
+  } {
+    const convertLinksToTwohopLinks_fromBackLink = (
+      sourceFile: TFile,
+      links: Record<string, Record<string, number>>,
+      twohopLinkList: Record<string, string[]>,
+      forwardLinkSet: Set<string>
+    ): TwohopLink[] => {
+      const twoHopLinks: Record<string, FileEntity[]> = {};
+
+      for (const k of Object.keys(twohopLinkList)) {
+        if (twohopLinkList[k].length > 0) {
+          twoHopLinks[k] = twohopLinkList[k]
+            .map((it) => {
+              const linkText = path2linkText(it);
+              if (forwardLinkSet.has(removeBlockReference(linkText))) {
+                return null;
+              }
+              return new FileEntity(activeFile.path, linkText);
+            })
+            .filter((it) => it);
+        }
+      }
+
+      return Object.keys(links[sourceFile.path])
+        .map((path) => {
+          return twoHopLinks[path]
+            ? new TwohopLink(
+                new FileEntity(sourceFile.path, sourceFile.path), //ここが違うだけの関数になっているのでなんとか分解して共通化したい
+                twoHopLinks[path]
+              )
+            : null;
+        })
+        .filter((it) => it)
+        .filter((it) => it.fileEntities.length > 0);
+    };
+
+    let unresolvedTwoHopLinks: TwohopLink[] = [];
+    let resolvedTwoHopLinks: TwohopLink[] = [];
+
+    for (let backwardFileEntity of backwardLinks) {
+      const backwardFile = this.app.metadataCache.getFirstLinkpathDest(
+        backwardFileEntity.linkText,
+        backwardFileEntity.sourcePath
+      );
+
+      if (!(backwardFile instanceof TFile)) continue;
+
+      const backwardFileCache: CachedMetadata =
+        this.app.metadataCache.getFileCache(backwardFile);
+
+      const twohopLinkRecord: Record<string, string[]> = {};
+
+      const fowardLinks = this.getForwardLinks(backwardFile, backwardFileCache);
+
+      twohopLinkRecord[backwardFileEntity.sourcePath] = fowardLinks
+        .filter((it) => {
+          const pathFile = this.app.metadataCache.getFirstLinkpathDest(
+            it.linkText,
+            it.sourcePath
+          );
+
+          if (!(pathFile instanceof TFile)) return false;
+          return (
+            !linkedPathSet.has(it.linkText) && activeFile.path !== pathFile.path
+          );
+        })
+        .map((it) => it.linkText);
+
+      unresolvedTwoHopLinks = [
+        ...unresolvedTwoHopLinks,
+        ...convertLinksToTwohopLinks_fromBackLink(
+          backwardFile,
+          this.app.metadataCache.unresolvedLinks,
+          twohopLinkRecord,
+          forwardLinkSet
+        ),
+      ];
+
+      resolvedTwoHopLinks = [
+        ...resolvedTwoHopLinks,
+        ...convertLinksToTwohopLinks_fromBackLink(
+          backwardFile,
+          this.app.metadataCache.resolvedLinks,
+          twohopLinkRecord,
+          forwardLinkSet
+        ),
+      ];
+    }
+
+    return { unresolvedTwoHopLinks, resolvedTwoHopLinks };
   }
 
   private async splitLinksByConnectivity(
