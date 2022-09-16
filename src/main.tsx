@@ -517,7 +517,8 @@ export default class TwohopLinksPlugin extends Plugin {
 
           if (!(pathFile instanceof TFile)) return false;
           return (
-            !linkedPathSet.has(it.linkText) && activeFile.path !== pathFile.path
+            !linkedPathSet.has(pathFile.name) &&
+            activeFile.path !== pathFile.path
           );
         })
         .map((it) => it.linkText);
