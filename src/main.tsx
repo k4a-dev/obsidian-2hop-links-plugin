@@ -426,7 +426,7 @@ export default class TwohopLinksPlugin extends Plugin {
             linkedPathSet.add(dest);
           }
 
-          result[src].push(dest);
+          if (dest.match(/.*\.md$/)) result[src].push(dest);
         }
 
         // FrontLink -> BackLinkの2hop
