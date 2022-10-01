@@ -199,7 +199,7 @@ export default class TwohopLinksPlugin extends Plugin {
 
     const tagLinksList = this.settings.excludeTag
       ? []
-      : this.getTagLinksList(activeFile, activeFileCache);
+      : this.getTagLinksList(activeFile, activeFileCache, getLinkedPathSet());
 
     // insert links to the footer
     for (const container of this.getContainerElements(
@@ -267,14 +267,14 @@ export default class TwohopLinksPlugin extends Plugin {
 
   getTagLinksList(
     activeFile: TFile,
-    activeFileCache: CachedMetadata
+    activeFileCache: CachedMetadata,
+    linkedPathSet: SimpleSet
   ): TagLinks[] {
     if (activeFileCache.tags) {
       const activeFileTagSet = new Set(
         activeFileCache.tags.map((it) => it.tag)
       );
       const tagMap: Record<string, FileEntity[]> = {};
-      const seen: Record<string, boolean> = {};
       for (const markdownFile of this.app.vault.getMarkdownFiles()) {
         if (markdownFile == activeFile) {
           continue;
@@ -288,10 +288,11 @@ export default class TwohopLinksPlugin extends Plugin {
             if (!tagMap[tag.tag]) {
               tagMap[tag.tag] = [];
             }
-            if (!seen[markdownFile.path]) {
+            if (!linkedPathSet.has(markdownFile.path)) {
               const linkText = path2linkText(markdownFile.path);
               tagMap[tag.tag].push(new FileEntity(activeFile.path, linkText));
-              seen[markdownFile.path] = true;
+
+              linkedPathSet.add(markdownFile.path);
             }
           }
         }
