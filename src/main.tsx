@@ -21,6 +21,10 @@ import {
 } from "./Settings";
 
 const CONTAINER_CLASS = "twohop-links-container";
+type SimpleSet = {
+  has: (value: string) => boolean;
+  add: (value: string) => Set<string>;
+};
 
 export default class TwohopLinksPlugin extends Plugin {
   settings: TwohopPluginSettings;
@@ -140,11 +144,19 @@ export default class TwohopLinksPlugin extends Plugin {
 
     let linkedPathSet = new Set<string>();
 
+    const getLinkedPathSet = (): SimpleSet => {
+      return this.settings.excludesDuplicateLinks
+        ? {
+            has: linkedPathSet.has.bind(linkedPathSet),
+            add: linkedPathSet.add.bind(linkedPathSet),
+          }
+        : { has: (v: string) => false, add: (v: string) => linkedPathSet };
+    };
+
     const backwardLinks = this.getBackLinks(
       activeFile,
       forwardLinkSet,
-
-      this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+      getLinkedPathSet()
     );
 
     // Aggregate links
@@ -154,7 +166,7 @@ export default class TwohopLinksPlugin extends Plugin {
           activeFile,
           this.app.metadataCache.unresolvedLinks,
           forwardLinkSet,
-          this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+          getLinkedPathSet()
         );
 
     const resolvedTwoHopLinks = this.settings.excludeFrontLink
@@ -163,7 +175,7 @@ export default class TwohopLinksPlugin extends Plugin {
           activeFile,
           this.app.metadataCache.resolvedLinks,
           forwardLinkSet,
-          this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+          getLinkedPathSet()
         );
 
     // Aggregate TwohopLinks by Backlink
@@ -173,7 +185,7 @@ export default class TwohopLinksPlugin extends Plugin {
           activeFile,
           backwardLinks,
           forwardLinkSet,
-          this.settings.excludesDuplicateLinks ? linkedPathSet : undefined
+          getLinkedPathSet()
         );
 
     const twoHopLinkSets = new Set<string>(
@@ -356,7 +368,7 @@ export default class TwohopLinksPlugin extends Plugin {
     activeFile: TFile,
     links: Record<string, Record<string, number>>,
     forwardLinkSet: Set<string>,
-    linkedPathSet: Set<string> | undefined
+    linkedPathSet: SimpleSet
   ): TwohopLink[] {
     const twoHopLinks: Record<string, FileEntity[]> = {};
     // no unresolved links in this file
@@ -402,7 +414,7 @@ export default class TwohopLinksPlugin extends Plugin {
   private aggregate2hopLinks(
     activeFile: TFile,
     links: Record<string, Record<string, number>>,
-    linkedPathSet: Set<string> | undefined
+    linkedPathSet: SimpleSet
   ): Record<string, string[]> {
     const result: Record<string, string[]> = {};
     const activeFileLinks = new Set(Object.keys(links[activeFile.path]));
@@ -421,10 +433,9 @@ export default class TwohopLinksPlugin extends Plugin {
           if (!result[src]) {
             result[src] = [];
           }
-          if (linkedPathSet !== undefined) {
-            if (linkedPathSet.has(dest)) continue;
-            linkedPathSet.add(dest);
-          }
+
+          if (linkedPathSet.has(dest)) continue;
+          linkedPathSet.add(dest);
 
           if (dest.match(/.*\.md$/)) result[src].push(dest);
         }
@@ -434,10 +445,10 @@ export default class TwohopLinksPlugin extends Plugin {
           if (!result[dest]) {
             result[dest] = [];
           }
-          if (linkedPathSet !== undefined) {
-            if (linkedPathSet.has(src)) continue;
-            linkedPathSet.add(src);
-          }
+
+          if (linkedPathSet.has(src)) continue;
+          linkedPathSet.add(src);
+
           result[dest].push(src);
         }
       }
@@ -450,7 +461,7 @@ export default class TwohopLinksPlugin extends Plugin {
     activeFile: TFile,
     backwardLinks: FileEntity[],
     forwardLinkSet: Set<string>,
-    linkedPathSet: Set<string> | undefined
+    linkedPathSet: SimpleSet
   ): {
     unresolvedTwoHopLinks: TwohopLink[];
     resolvedTwoHopLinks: TwohopLink[];
@@ -608,7 +619,7 @@ export default class TwohopLinksPlugin extends Plugin {
   private getBackLinks(
     activeFile: TFile,
     forwardLinkSet: Set<string>,
-    linkedPathSet: Set<string> | undefined
+    linkedPathSet: SimpleSet
   ): FileEntity[] {
     const name = activeFile.path;
     const resolvedLinks: Record<string, Record<string, number>> = this.app
@@ -623,7 +634,7 @@ export default class TwohopLinksPlugin extends Plugin {
             continue;
           }
           result.push(new FileEntity(activeFile.path, linkText));
-          if (linkedPathSet !== undefined) linkedPathSet.add(src);
+          linkedPathSet.add(src);
         }
       }
     }
