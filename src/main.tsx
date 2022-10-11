@@ -599,20 +599,28 @@ export default class TwohopLinksPlugin extends Plugin {
       // sometime, we can't get metadata cache from obsidian.
       console.log(`Missing activeFileCache '${activeFile.path}`);
     } else {
+      const seen = new Set<string>();
       if (activeFileCache.links != null) {
-        const seen = new Set<string>();
-        return activeFileCache.links
-          .map((it) => {
-            const key = removeBlockReference(it.link);
-            if (!seen.has(key)) {
-              seen.add(key);
-              return new FileEntity(activeFile.path, it.link);
-            } else {
-              return null;
-            }
-          })
-          .filter((it) => it);
+        activeFileCache.links.forEach((it) => {
+          const key = removeBlockReference(it.link);
+          if (!seen.has(key)) {
+            seen.add(key);
+          }
+        });
       }
+
+      if (activeFileCache.embeds != null) {
+        activeFileCache.embeds.forEach((it) => {
+          const key = removeBlockReference(it.link);
+          if (!seen.has(key)) {
+            seen.add(key);
+          }
+        });
+      }
+
+      return [...seen].map((key) => {
+        return new FileEntity(activeFile.path, key);
+      });
     }
     return [];
   }
