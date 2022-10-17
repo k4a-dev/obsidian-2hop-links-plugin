@@ -222,9 +222,7 @@ export default class TwohopLinksPlugin extends Plugin {
   private getContainerElements(containerEl: HTMLElement): Element[] {
     if (this.settings.putOnTop) {
       const elements = containerEl.querySelectorAll(
-        `.markdown-source-view .CodeMirror-scroll,
-        .markdown-preview-view,
-        .markdown-source-view .cm-contentContainer`
+        `div:not(.markdown-embed-content) > .markdown-source-view .cm-sizer`
       );
       console.debug(`getContainerElements: ${elements.length}`);
 
@@ -248,9 +246,7 @@ export default class TwohopLinksPlugin extends Plugin {
       return containers;
     } else {
       const elements = containerEl.querySelectorAll(
-        `.markdown-source-view .CodeMirror-lines,
-        div:not(.markdown-embed-content) > .markdown-preview-view,
-        div:not(.markdown-embed-content) > .markdown-source-view .cm-contentContainer`
+        `div:not(.markdown-embed-content) > .markdown-source-view .cm-sizer`
       );
 
       const containers: Element[] = [];
@@ -715,6 +711,7 @@ export default class TwohopLinksPlugin extends Plugin {
 
   onunload(): void {
     console.log("unloading plugin");
+    this.removeTwohopLinks();
   }
 
   private async loadSettings(): Promise<void> {
